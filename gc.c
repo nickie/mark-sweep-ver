@@ -1,11 +1,11 @@
+#include <stdio.h>
 #include "gc.h"
 #include "mark_and_sweep.h"
 
-word null = 0xFFFFFFFFU;
+word * root[ROOT_SIZE];
+word rootp;
 
-word roots[2];
-
-word *mem;
+word mem[MEMORY_SIZE];
 word freeStart;
 
 word marked;
@@ -13,9 +13,41 @@ word marked;
 word cnt;
 word swept;
 
-word rnd = 0;
+void mem_init()
+{
+   mem[0] = WORD_OF_DATA(MEMORY_SIZE);
+   mem[1] = null;
+   freeStart = 0;
+   rootp = 0;
+}
 
 void gc() {
-   mark();
-   sweep();
+  printf("\nGC!\n");
+  mark();
+  sweep();
+}
+
+void root_add (word *p)
+{
+  assert(rootp < ROOT_SIZE);
+  root[rootp++] = p;
+}
+
+void root_pop (int n)
+{
+  assert(n <= rootp);
+  rootp -= n;
+}
+
+void print_free ()
+{
+  // no need to keep track of rootset
+  word list = freeStart;
+  printf("free: [");
+  while (list != null) {
+    word x = DATA_OF_WORD(mem[list]);
+    printf("(%d, %d)", list, x);
+    list = POINTER_OF_WORD(mem[list+1]);
+  }
+  printf("]\n");
 }
