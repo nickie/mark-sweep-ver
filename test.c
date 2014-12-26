@@ -13,7 +13,7 @@ int main (int argc, char *argv[])
   //print(l);
   word fl = l;
   root_add(&fl);
-  for (i = 0; i < 100000; i++) {
+  for (i = 0; i < 1000000; i++) {
     printf("\r%d", i);
     fl = reverse(fl);
     if (length(fl) != N) {
