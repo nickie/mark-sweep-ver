@@ -5,7 +5,7 @@
 
 // Object at address p has size size..
 
-/*@ predicate sz_of_obj{L}(integer p, integer size) =
+/*@ predicate size_obj{L}(integer p, integer size) =
   @   \forall integer p, size;
   @     IS_DATA(\at(mem[p], L))
   @   ==> size == DATA_OF_WORD(\at(mem[p], L));
@@ -58,8 +58,15 @@
   @ }
   @*/
 
-// There is inuse words of objects in-use and free words of free objects in range [a,b]..
+//Object at adress o is has the same contents in states L1 and L2..
+/*@ predicate same_obj{L1, L2}(integer p) =
+  @   \forall integer p, s, i;
+  @     size_obj{L1}(p, s)
+  @   ==> 0 <= i < s - OBJ_HEADER_SIZE
+  @   ==> \at(mem[p + OBJ_HEADER_SIZE + i], L1) == \at(mem[p + OBJ_HEADER_SIZE + i], L2);
+  @*/
 
+// TODO documentation
 /*@ inductive scan_mem{L}(integer a, integer b, integer inuse, integer free) {
   @   case scan_mem0{L}:
   @     \forall integer a;
@@ -88,12 +95,11 @@
 // Memory, i.e array mem[MEMORY_SIZE] is sane..
 
 /*@ predicate mem_sanity =
-  @    \valid(mem+(0..MEMORY_SIZE))
-  @ && scan_mem(0, MEMORY_SIZE, inuse, free)
-  @ && inuse + free == MEMORY_SIZE;
+  @   \valid_range(mem, 0, MEMORY_SIZE-1)
+  @ && \forall integer inuse, free;
+  @      scan_mem(0, MEMORY_SIZE, inuse, free)
+  @    ==> inuse + free == MEMORY_SIZE;
   @*/
-
-//@ type list = Nil | Cons (integer, list);
 
 // Object at address b is reachable through object at address a..
 
@@ -103,7 +109,7 @@
   @       valid_obj(a, 0, MEMORY_SIZE)
   @     ==> reachable{L}(a, a);
   @   case reachable1{L}:
-  @     \forall integer a, s, t;
+  @     \forall integer a, s, t, b;
   @       valid_obj(a, 0, MEMORY_SIZE) && size_obj(a, s)
   @     ==>  \exists integer i;
   @            0 <= i < s - OBJ_HEADER_SIZE
@@ -122,7 +128,7 @@
   @       valid_obj(a, 0, MEMORY_SIZE)
   @     ==> unmarked_reachable{L}(a, a);
   @   case reachable1{L}:
-  @     \forall integer a, s, t;
+  @     \forall integer a, s, t, b;
   @       valid_obj(a, 0, MEMORY_SIZE) && size_obj(a, s)
   @     ==>  \exists integer i;
   @            0 <= i < s - OBJ_HEADER_SIZE
@@ -140,46 +146,60 @@
   @{
   @ logic integer count{L}(integer root, integer a, integer b) reads mem[a..b-1];
   @ axiom count0{L}:
-  @   \forall integer a;
-  @     count(a, a) == 0;
+  @   \forall integer root, a;
+  @     count{L}(root, a, a) == 0;
   @ axiom count1{L}:
-  @   \forall integer a, b, s;
-  @     \valid_obj(a, 0, MEMORY_SIZE)
+  @   \forall integer root, a, b, s;
+  @     valid_obj{L}(a, 0, MEMORY_SIZE)
   @   ==> size_obj{L}(a, s)
   @   ==> reachable{L}(root, a)
   @   ==> ! IS_MARKED(mem[a])
-  @   ==> count(root, a, b) == count(root, a + s, b) + 1;
+  @   ==> count{L}(root, a, b) == count{L}(root, a + s, b) + 1;
   @ axiom count2{L}:
-  @   \forall integer a, b, s;
-  @     valid_obj(a, 0, MEMORY_SIZE)
-  @   ==> size_obj{L}(a, s)   
+  @   \forall integer root, a, b, s;
+  @     valid_obj{L}(a, 0, MEMORY_SIZE)
+  @   ==> size_obj{L}(a, s) 
   @   ==> ! reachable{L}(root, a)
-  @   ==> count(root, a, b) == count(root, a + s, b);
+  @   ==> count{L}(root, a, b) == count{L}(root, a + s, b);
   @ }
   @*/
 
-// s is the stack containing object addresses starting from object at address a..
-
-/*@ inductive c_stack{L}(integer a, list s) {
-  @   case stack0{L}:
-  @     \forall integer a, i;
-  @       i == DATA_OF_WORD(\at(mem[a+1], L))
-  @     ==> IS_DATA(mem[a + OBJ_HEADER_SIZE + i])
-  @     ==> c_stack{L}(a, Cons(a, Nil));
-  @   case stack1{L}:
-  @     \forall integer a, i, t, list s;
-  @       i == DATA_OF_WORD(\at(mem[a+1], L))
-  @     ==> IS_POINTER(mem[a + OBJ_HEADER_SIZE + i])
-  @     ==> t == POINTER_OF_WORD(mem[a + OBJ_HEADER_SIZE + i])
-  @     ==> c_stack{L}(t, ts)
-  @     ==> c_stack{L}(a, Cons(a, ts));
+// Object at address p is in stack whose top element is object at address s..
+/*@ inductive in_stack{L}(integer p, integer s) {
+  @   case in_stack0{L}:
+  @     \forall integer p;
+  @       valid_obj(p, 0, MEMORY_SIZE)
+  @     ==> in_stack{L}(p, p);
+  @   case free_obj1{L}:
+  @     \forall integer p, s, q;
+  @       valid_obj{L}(s, 0, MEMORY_SIZE)
+  @     ==> IS_POINTER(\at(mem[s + 1], L))
+  @     ==> q == POINTER_OF_WORD(\at(mem[s + 1], L))
+  @     ==> in_stack{L}(p, q)
+  @     ==> in_stack{L}(p, s);
   @ }
   @*/
 
-//(*TODO*)
-// in_stack(integer o, list stack)
-//(*TODO*)
-// adj_in_stack(integer o0, integer o2, list stack)
+//Objects at addresses o0, o1 are adjacent in stack whose top element is object at address s..
+/*@ inductive adj_in_stack{L}(integer p0, integer p1, integer s) {
+  @  case adj_in_stack0{L}:
+  @    \forall integer p0, p1, i0, i1; 
+  @      IS_DATA(\at(mem[p0 + 1], L))
+  @    ==> i0 == DATA_OF_WORD(\at(mem[p0 + 1], L))
+  @    ==> IS_POINTER(\at(mem[p0 + OBJ_HEADER_SIZE + i0], L))
+  @    ==> p1 == POINTER_OF_WORD(\at(mem[p0 + OBJ_HEADER_SIZE + i0], L))
+  @    ==> adj_in_stack{L}(p0, p1, p0);
+  @  case adj_in_stack1{L}:
+  @    \forall integer p0, p1, s, i, q;
+  @      valid_obj(s, 0, MEMORY_SIZE - 1)
+  @    && IS_DATA(\at(mem[s + 1], L))
+  @    ==> i == DATA_OF_WORD(\at(mem[s + OBJ_HEADER_SIZE + 1], L))
+  @    ==> IS_POINTER(\at(mem[s + OBJ_HEADER_SIZE + i], L))
+  @    ==> q == POINTER_OF_WORD(\at(mem[s + OBJ_HEADER_SIZE + i], L))
+  @    ==> adj_in_stack{L}(p0, p1, q)
+  @    ==> adj_in_stack{L}(p0, p1, s);
+  @ }
+  @*/
 
 void dfs(word x);
 void mark();

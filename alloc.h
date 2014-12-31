@@ -1,4 +1,4 @@
-#ifndef __ALLOC_H_
+#ifndef __ALLOC_H__
 #define __ALLOC_H__
 
 #include "gc.h"

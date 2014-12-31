@@ -32,7 +32,7 @@ typedef unsigned int word;
 #define MARK(w)            ((w) & 0xFFFFFFFEU)
 #define UNMARK(w)          ((w) | 0x00000001U)
 
-#define MEMORY_SIZE (1 << 20)
+#define MEMORY_SIZE 1 << 20
 
 #define OBJ_HEADER_SIZE 2
 #define ROOT_SIZE 128

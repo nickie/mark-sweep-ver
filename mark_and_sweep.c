@@ -44,9 +44,9 @@ void dfs (word root)
   mem[curr + 1] = WORD_OF_DATA(0);
 
 /*@ loop invariant
-  @   (\forall integer root, o;
+  @   (\forall integer o;
   @     valid_obj(o, 0, MEMORY_SIZE)
-  @   ==> reachable{Pre}(x, o)
+  @   ==> reachable{Pre}(root, o)
   @   ==> reachable(curr, o) || reachable(prev, o));
   @
   @  loop invariant
@@ -57,39 +57,43 @@ void dfs (word root)
   @  loop invariant
   @    (\forall integer o;
   @      valid_obj(o, 0, MEMORY_SIZE)
-  @     ==> ! \old(reachable(root, o))
+  @     ==> ! reachable{Pre}(root, o)
   @     ==> \at(mem[o], Here) == \at(mem[o], Pre));
   @
   @  loop invariant
-  @    (\exists list stack;
-  @       c_stack(prev, stack)
-  @    && (\forall integer o;
-  @          valid_obj(o, 0, MEMORY_SIZE)
-  @          && in_stack(o, stack)
-  @        ==> IS_MARKED(mem[o]))
-  @    && (\forall integer o;
-  @          valid_obj(o, 0, MEMORY_SIZE)
-  @          && reachable{Pre}(root, o)
-  @          && !IS_MARKED(mem[o])
-  @        ==> unmarked_reachable(curr, o) || \exists integer q; in_stack(q, stack) ==> unmarked_reachable(q, o))
-  @    && (\forall integer o, s;
-  @          valid_obj(o, 0, MEMORY_SIZE)
-  @          && ! in_stack(o, stack)
-  @          && size_obj(o, s)
-  @       ==> \forall integer i;
-  @             0 <= i < s - OBJ_HEADER_SIZE
-  @           ==> \at(mem[o + OBJ_HEADER_SIZE + i], Here) == \at(mem[o + OBJ_HEADER_SIZE + i], Pre))
-  @    && (\forall integer o0, o1, s1;
-  @          valid_obj(o0, 0, MEMORY_SIZE)
-  @         && valid_obj(o1, 0, MEMORY_SIZE)
-  @         && adj_in_stack(o1, o2, stack)
-  @        ==> size_obj(o1, s1)
-  @        ==> i1 == DATA_OF_WORD(\at(mem[o1 + 1], Here))
-  @        ==> \at(mem[o1 + OBJ_HEADER_SIZE + i1], Pre) == WORD_OF_POINTER(o0 + OBJ_HEADER_SIZE)
-  @            && \forall integer j1;
-  @                 0 <= j1 < s1 - OBJ_HEADER_SIZE && j1 != i1
-  @                 ==> \at(mem[o1 + OBJ_HEADER_SIZE + j1], Pre) == \at(mem[o1 + OBJ_HEADER_SIZE + j1], Here))
-  @  );
+  @    (\forall integer o;
+  @      valid_obj(o, 0, MEMORY_SIZE)
+  @      && in_stack(o, prev)
+  @      ==> IS_MARKED(mem[o]));
+  @
+  @  loop invariant
+  @    (\forall integer o;
+  @      valid_obj(o, 0, MEMORY_SIZE)
+  @      && reachable{Pre}(root, o)
+  @      && !IS_MARKED(mem[o])
+  @      ==> unmarked_reachable(curr, o) 
+  @         || \exists integer q; 
+  @            in_stack(q, prev) 
+  @         ==> unmarked_reachable(q, o));
+  @
+  @  loop invariant
+  @    (\forall integer o, s;
+  @      valid_obj(o, 0, MEMORY_SIZE)
+  @      && ! in_stack(o, prev)
+  @      ==> same_obj{Pre, Here}(o));
+  @
+  @  loop invariant
+  @    (\forall integer o0, o1, s1, i1;
+  @      valid_obj(o0, 0, MEMORY_SIZE)
+  @      && valid_obj(o1, 0, MEMORY_SIZE)
+  @      && adj_in_stack(o0, o1, prev)
+  @      ==> size_obj(o1, s1)
+  @      ==> i1 == DATA_OF_WORD(\at(mem[o1 + 1], Here))
+  @      ==> \at(mem[o1 + OBJ_HEADER_SIZE + i1], Pre) == WORD_OF_POINTER(o0 + OBJ_HEADER_SIZE)
+  @          && \forall integer j1;
+  @               0 <= j1 < s1 - OBJ_HEADER_SIZE && j1 != i1
+  @               ==> \at(mem[o1 + OBJ_HEADER_SIZE + j1], Pre) == \at(mem[o1 + OBJ_HEADER_SIZE + j1], Here));
+  @
   @  loop invariant mem_sanity;
   @  loop variant count(root, 0, MEMORY_SIZE);
   @*/
@@ -130,24 +134,24 @@ void dfs (word root)
   @ requires
   @  (\forall integer o;
   @      valid_obj(o, 0, MEMORY_SIZE)
-  @   && \exists integer r; 0 <= r < ROOT_SIZE ==> reachable(*roots[r] - OBJ_HEADER_SIZE, o) ==> ! IS_MARKED(mem[o])
+  @   && \exists integer r; 0 <= r < ROOT_SIZE ==> reachable(*root[r] - OBJ_HEADER_SIZE, o) ==> ! IS_MARKED(mem[o])
   @  );
   @ requires
   @  (\forall integer r;
   @     0 <= r < ROOT_SIZE
-  @   ==> *roots[r] == null || 0 <= *roots[r] < MEMORY_SIZE
+  @   ==> *root[r] == null || 0 <= *root[r] < MEMORY_SIZE
   @  );
   @ ensures mem_sanity;
   @ ensures
   @  (\forall integer o;
   @     valid_obj(o, 0, MEMORY_SIZE)
-  @   ==> \exists integer r; 0 <= r < ROOT_SIZE ==> reachable(*roots[r], o)
+  @   ==> \exists integer r; 0 <= r < ROOT_SIZE ==> reachable(*root[r], o)
   @   ==> IS_MARKED(mem[o])
   @  );
   @ ensures
   @  (\forall integer o;
   @      valid_obj(o, 0, MEMORY_SIZE)
-  @   ==> \forall integer r; 0 <= r < ROOT_SIZE ==> ! reachable(*roots[r], o)
+  @   ==> \forall integer r; 0 <= r < ROOT_SIZE ==> ! reachable(*root[r], o)
   @   ==> mem[o] == \at(mem[o], Old)
   @  );
   @  ensures
@@ -165,13 +169,13 @@ void mark ()
   cnt = 0;
   word i;
 
-/*@ loop invariant sanity;
+/*@ loop invariant mem_sanity;
   @ loop invariant
   @  (\forall integer j;
   @     0 <= j < i
   @   ==> \forall integer o;
   @         valid_obj(o, 0, MEMORY_SIZE)
-  @       ==> reachable(*roots[j], o)
+  @       ==> reachable(*root[j], o)
   @       ==> IS_MARKED(mem[o])
   @  );
   @ loop invariant
@@ -179,8 +183,8 @@ void mark ()
   @     0 <= j < i
   @   ==> \forall integer o;
   @         valid_obj(o, 0, MEMORY_SIZE)
-  @       ==> ! reachable(*roots[j], o)
-  @       ==> mem[o] == \at(mem[o], Old)
+  @       ==> ! reachable(*root[j], o)
+  @       ==> mem[o] == \at(mem[o], Pre)
   @  );
   @ loop variant rootp-i;
   @*/
@@ -194,7 +198,7 @@ void mark ()
   @     valid_obj(o, 0, MEMORY_SIZE - 1)
   @   ==> \forall integer r;
   @         0 <= r < ROOT_SIZE
-  @       ==> reachable(*roots[r] - OBJ_HEADER_SIZE, o)
+  @       ==> reachable(*root[r] - OBJ_HEADER_SIZE, o)
   @       ==> IS_MARKED(mem[o])
   @  );
   @ requires 0 <= freeStart < MEMORY_SIZE - 1;
