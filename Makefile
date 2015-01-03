@@ -1,4 +1,4 @@
-.PHONY: all verify clean distclean
+.PHONY: all verify alt-ergo clean distclean
 
 CC=gcc
 
@@ -21,6 +21,9 @@ JESSIE_OPT=
 
 verify:
 	frama-c -jessie $(JESSIE_OPT) $(JESSIE_CPU) mark_and_sweep.c
+
+alt-ergo:
+	frama-c -jessie $(JESSIE-OPT) -jessie-atp alt-ergo $(JESSIE_CPU) mark_and_sweep.c
 
 clean:
 	$(RM) *.o *~

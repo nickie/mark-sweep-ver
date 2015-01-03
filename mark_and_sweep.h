@@ -109,13 +109,13 @@
   @       valid_obj(a, 0, MEMORY_SIZE)
   @     ==> reachable{L}(a, a);
   @   case reachable1{L}:
-  @     \forall integer a, s, t, b;
-  @       valid_obj(a, 0, MEMORY_SIZE) && size_obj(a, s)
-  @     ==>  \exists integer i;
-  @            0 <= i < s - OBJ_HEADER_SIZE
-  @          ==> IS_POINTER(mem[a + OBJ_HEADER_SIZE + i])
-  @          ==> t == POINTER_OF_WORD(mem[a + OBJ_HEADER_SIZE + i])
-  @          ==> reachable{L}(t - OBJ_HEADER_SIZE, b)
+  @     \forall integer a, s, t, b, i;
+  @       valid_obj(a, 0, MEMORY_SIZE)
+  @     ==> size_obj(a, s)
+  @     ==> 0 <= i < s - OBJ_HEADER_SIZE
+  @     ==> IS_POINTER(mem[a + OBJ_HEADER_SIZE + i])
+  @     ==> t == POINTER_OF_WORD(mem[a + OBJ_HEADER_SIZE + i])
+  @     ==> reachable{L}(t - OBJ_HEADER_SIZE, b)
   @     ==> reachable{L}(a, b);
   @ }
   @*/
@@ -128,14 +128,14 @@
   @       valid_obj(a, 0, MEMORY_SIZE)
   @     ==> unmarked_reachable{L}(a, a);
   @   case reachable1{L}:
-  @     \forall integer a, s, t, b;
-  @       valid_obj(a, 0, MEMORY_SIZE) && size_obj(a, s)
-  @     ==>  \exists integer i;
-  @            0 <= i < s - OBJ_HEADER_SIZE
-  @          ==> IS_POINTER(mem[a + OBJ_HEADER_SIZE + i])
-  @          ==> t == POINTER_OF_WORD(mem[a + OBJ_HEADER_SIZE + i])
-  @          ==> !IS_MARKED(mem[t - OBJ_HEADER_SIZE])
-  @          ==> unmarked_reachable{L}(t - OBJ_HEADER_SIZE, b)
+  @     \forall integer a, s, t, b, i;
+  @       valid_obj(a, 0, MEMORY_SIZE)
+  @     ==> size_obj(a, s)
+  @     ==> 0 <= i < s - OBJ_HEADER_SIZE
+  @     ==> IS_POINTER(mem[a + OBJ_HEADER_SIZE + i])
+  @     ==> t == POINTER_OF_WORD(mem[a + OBJ_HEADER_SIZE + i])
+  @     ==> !IS_MARKED(mem[t - OBJ_HEADER_SIZE])
+  @     ==> unmarked_reachable{L}(t - OBJ_HEADER_SIZE, b)
   @     ==> unmarked_reachable{L}(a, b);
   @ }
   @*/
