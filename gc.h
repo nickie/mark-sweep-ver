@@ -17,7 +17,7 @@
 
 typedef unsigned int word;
 
-#define null 0xFFFFFFFFU
+#define null 0x7FFFFFFF
 
 #define IS_DATA(w)         (((w) & 0x00000001U) == 0x00000001U)
 #define IS_POINTER(w)      (((w) & 0x00000001U) == 0x00000000U)
@@ -25,14 +25,14 @@ typedef unsigned int word;
 #define WORD_OF_DATA(w)    (((w) << 1) | 0x00000001U)
 #define DATA_OF_WORD(w)    (((w) >> 1) & 0x7FFFFFFFU)
 
-#define WORD_OF_POINTER(w) ((w) == null ? null : ((w) << 1) & 0xFFFFFFFEU)
-#define POINTER_OF_WORD(w) ((w) == null ? null : ((w) >> 1) & 0x7FFFFFFFU)
+#define WORD_OF_POINTER(w) (((w) << 1) & 0xFFFFFFFEU)
+#define POINTER_OF_WORD(w) (((w) >> 1) & 0x7FFFFFFFU)
 
 #define IS_MARKED(w)       (((w) & 0x00000001U) == 0x00000000U)
 #define MARK(w)            ((w) & 0xFFFFFFFEU)
 #define UNMARK(w)          ((w) | 0x00000001U)
 
-#define MEMORY_SIZE 1 << 20
+#define MEMORY_SIZE (1 << 20)
 
 #define OBJ_HEADER_SIZE 2
 #define ROOT_SIZE 128

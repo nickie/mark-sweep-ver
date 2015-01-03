@@ -34,7 +34,7 @@ word append(word x, word y)
   if (y == null) return x;
   if (x == null) return y;
   word p = x;
-  while (mem[p+1] != null)
+  while (POINTER_OF_WORD(mem[p+1]) != null)
     p = POINTER_OF_WORD(mem[p+1]);
   mem[p+1] = WORD_OF_POINTER(y);
   return x;

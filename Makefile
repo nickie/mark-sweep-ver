@@ -30,4 +30,4 @@ clean:
 
 distclean: clean
 	$(RM) test
-	$(RM) -r *.jessie
+	$(RM) -r test.dSYM *.jessie

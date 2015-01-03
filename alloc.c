@@ -34,7 +34,7 @@ word allocate (word size)
   // initialize the object
   word i;
   for (i = OBJ_HEADER_SIZE; i < size; i++)
-    mem[p + i] = null;
+    mem[p + i] = WORD_OF_POINTER(null);
   return p + OBJ_HEADER_SIZE;
 }
 

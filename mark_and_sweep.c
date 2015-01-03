@@ -104,7 +104,7 @@ void dfs (word root)
     word y;
     if (i < size) {
       word t = mem[curr + OBJ_HEADER_SIZE + i];
-      if (IS_POINTER(t)) {
+      if (IS_POINTER(t) && POINTER_OF_WORD(t) != null) {
         y = POINTER_OF_WORD(t);
         if (!IS_MARKED(mem[y - OBJ_HEADER_SIZE])) {
           mem[curr + OBJ_HEADER_SIZE + i] = prev;
@@ -229,7 +229,7 @@ void sweep ()
   while (p < MEMORY_SIZE) {
     word size = DATA_OF_WORD(mem[p]);
     // if next node not already swept, or not last free node, sweep it
-    if ((mem[p+1] != null) && (!(IS_POINTER(mem[p+1])))) {
+    if (!IS_POINTER(mem[p+1])) {
       if (IS_MARKED(mem[p]))
         mem[p] = UNMARK(mem[p]);
       else {

@@ -16,7 +16,7 @@ word swept;
 void mem_init()
 {
    mem[0] = WORD_OF_DATA(MEMORY_SIZE);
-   mem[1] = null;
+   mem[1] = WORD_OF_POINTER(null);
    freeStart = 0;
    rootp = 0;
 }
